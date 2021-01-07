@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Stock</title>
+		<style>
+			html,
+			body {
+				height: 100%;
+                font-family: Arial, Helvetica, sans-serif;
+			}
+			body {
+				margin: 0;
+			}
+
+			.flex-container {
+				height: 100%;
+				padding: 0;
+				margin: 0;
+				display: -webkit-box;
+				display: -moz-box;
+				display: -ms-flexbox;
+				display: -webkit-flex;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			row {
+				width: auto;
+			}
+			.flex-item {
+				text-align: center;
+                padding-bottom: 10px;
+			}
+
+			#stock-value {
+				font-size: 2.5em;
+			}
+
+			#stock-label {
+				font-size: small;
+                opacity: 0.4;
+			}
+		</style>
+
+		<script type="text/javascript">
+			function formatMoney(
+				amount,
+				decimalCount = 2,
+				decimal = ".",
+				thousands = ","
+			) {
+				try {
+					decimalCount = Math.abs(decimalCount);
+					decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
+
+					const negativeSign = amount < 0 ? "-" : "";
+
+					let i = parseInt(
+						(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount))
+					).toString();
+					let j = i.length > 3 ? i.length % 3 : 0;
+
+					return (
+						negativeSign +
+						(j ? i.substr(0, j) + thousands : "") +
+						i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) +
+						(decimalCount
+							? decimal +
+							  Math.abs(amount - i)
+									.toFixed(decimalCount)
+									.slice(2)
+							: "")
+					);
+				} catch (e) {
+					console.log(e);
+				}
+			}
+
+			function getStockData(stockTickers = []) {
+				if (!stockTickers || stockTickers.length === 0) {
+					return Promise.reject(
+						"At least one stock ticker symbol must be specified"
+					);
+				}
+				const apiEndpoint = `https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/${stockTickers.join(
+					","
+				)}`;
+				return fetch(apiEndpoint, {
+					method: "GET",
+					headers: {
+						"x-rapidapi-key":
+							"1fc211c81emshd7ffec039997b71p15d307jsn0dc3d94ee321",
+						"x-rapidapi-host": "yahoo-finance15.p.rapidapi.com",
+					},
+				}).then((response) => response.json());
+			}
+		</script>
+	</head>
+	<body>
+		<div class="flex-container">
+			<div id="row">
+				<div id="stock-value" class="flex-item"></div>
+				<div id="stock-label" class="flex-item"></div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var queryString = window.location.search;
+			var urlParams = new URLSearchParams(queryString);
+
+			var ticker = urlParams.get("symbol");
+			var shares = urlParams.get("shares");
+
+			var label = urlParams.get("label");
+
+			var bgcolor = urlParams.get("bgcolor") || "white";
+			var textcolor = urlParams.get("textcolor") || "black";
+
+			document.body.style.backgroundColor = bgcolor;
+			document.body.style.color = textcolor;
+
+			async function run() {
+				if (!ticker || !shares) {
+					document.getElementById("stock-label").innerHTML =
+						"specify symbol and shares in url params";
+					return;
+				}
+
+				const stockData = await getStockData([ticker]);
+
+				const stock = stockData[0];
+				const price =
+					stock.regularMarketPrice || stock.regularMarketPreviousClose;
+				// console.log(stock.symbol, price);
+
+				const totalValue = price * shares;
+
+				document.getElementById("stock-value").innerHTML = `$${formatMoney(totalValue, 2, ".", ",")}`;
+
+				if (label) {
+					document.getElementById("stock-label").innerHTML = label;
+				}
+			}
+			run();
+		</script>
+	</body>
+</html>
