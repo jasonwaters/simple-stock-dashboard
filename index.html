@@ -27,7 +27,7 @@
 				align-items: center;
 				justify-content: center;
 			}
-			row {
+			.row {
 				width: auto;
 			}
 			.flex-item {
@@ -101,40 +101,39 @@
 	</head>
 	<body>
 		<div class="flex-container">
-			<div id="row">
+			<div class="row">
 				<div id="stock-value" class="flex-item"></div>
 				<div id="stock-label" class="flex-item"></div>
 			</div>
 		</div>
 		<script type="text/javascript">
-			var queryString = window.location.search;
-			var urlParams = new URLSearchParams(queryString);
+			const ONE_MINUTE = 60000;
 
-			var ticker = urlParams.get("symbol");
-			var shares = urlParams.get("shares");
+			const queryString = window.location.search;
+			const urlParams = new URLSearchParams(queryString);
 
-			var label = urlParams.get("label");
+			const ticker = urlParams.get("symbol");
+			const shares = parseFloat(urlParams.get("shares"));
 
-			var bgcolor = urlParams.get("bgcolor") || "white";
-			var textcolor = urlParams.get("textcolor") || "black";
+			const label = urlParams.get("label");
+
+			const bgcolor = urlParams.get("bgcolor") || "white";
+			const textcolor = urlParams.get("textcolor") || "black";
 
 			document.body.style.backgroundColor = bgcolor;
 			document.body.style.color = textcolor;
 
-			async function run() {
-				if (!ticker || !shares) {
+			async function update() {
+				if (!ticker || isNaN(shares)) {
 					document.getElementById("stock-label").innerHTML =
 						"specify symbol and shares in url params";
 					return;
 				}
 
 				const stockData = await getStockData([ticker]);
+				const { regularMarketPrice } = stockData[0];
 
-				const stock = stockData[0];
-				const price =
-					stock.regularMarketPrice || stock.regularMarketPreviousClose;
-
-				const totalValue = price * shares;
+				const totalValue = regularMarketPrice * shares;
 
 				document.getElementById("stock-value").innerHTML = `$${formatMoney(totalValue, 2, ".", ",")}`;
 
@@ -142,7 +141,8 @@
 					document.getElementById("stock-label").innerHTML = label;
 				}
 			}
-			run();
+			update();
+			setInterval(() => update(), ONE_MINUTE);
 		</script>
 	</body>
 </html>
