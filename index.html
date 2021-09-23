@@ -85,15 +85,14 @@
 						"At least one stock ticker symbol must be specified"
 					);
 				}
-				const apiEndpoint = `https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/${stockTickers.join(
-					","
-				)}`;
+        const symbols = encodeURIComponent(stockTickers.join(","));
+				const apiEndpoint = `https://mboum-finance.p.rapidapi.com/qu/quote?symbol=${symbols}`;
 				return fetch(apiEndpoint, {
 					method: "GET",
 					headers: {
 						"x-rapidapi-key":
 							"1fc211c81emshd7ffec039997b71p15d307jsn0dc3d94ee321",
-						"x-rapidapi-host": "yahoo-finance15.p.rapidapi.com",
+						"x-rapidapi-host": "mboum-finance.p.rapidapi.com",
 					},
 				}).then((response) => response.json());
 			}
